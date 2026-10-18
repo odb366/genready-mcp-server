@@ -13,6 +13,7 @@ import {
   ErrorCode,
   ListToolsRequestSchema,
   McpError,
+  type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 
 export interface ProxyInfo {
@@ -34,7 +35,16 @@ function connectionHint(err: unknown): string {
   );
 }
 
-export function createProxyServer(connectUpstream: UpstreamFactory, info: ProxyInfo): Server {
+/**
+ * `fallbackTools` is the list served when the hosted endpoint cannot be reached
+ * (no API key, offline), so a client or scanner can still read what the tools are.
+ * Calling a tool still needs the connection.
+ */
+export function createProxyServer(
+  connectUpstream: UpstreamFactory,
+  info: ProxyInfo,
+  fallbackTools?: Tool[],
+): Server {
   let upstream: Promise<Client> | null = null;
 
   const getUpstream = (): Promise<Client> => {
@@ -54,6 +64,7 @@ export function createProxyServer(connectUpstream: UpstreamFactory, info: ProxyI
     try {
       client = await getUpstream();
     } catch (err) {
+      if (fallbackTools) return { tools: fallbackTools };
       throw new McpError(ErrorCode.InternalError, connectionHint(err));
     }
     return client.listTools(request.params);

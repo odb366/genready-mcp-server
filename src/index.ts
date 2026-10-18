@@ -11,6 +11,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { PACKAGE_VERSION, resolveConfig } from './config.js';
 import { createProxyServer } from './proxy.js';
+import { STATIC_TOOLS } from './toolList.js';
 
 const args = process.argv.slice(2);
 if (args.includes('--version') || args.includes('-v')) {
@@ -19,13 +20,21 @@ if (args.includes('--version') || args.includes('-v')) {
 }
 
 const resolved = resolveConfig(process.env);
-if (!resolved.ok) {
+const keyMissing = !process.env.GENREADY_API_KEY?.trim();
+if (!resolved.ok && !keyMissing) {
   console.error(`Error: ${resolved.error}`);
   process.exit(1);
 }
-const { apiKey, mcpUrl } = resolved.config;
+if (!resolved.ok) {
+  // Start anyway so clients can read the tool list. Tool calls explain what to set.
+  console.error(
+    `Warning: ${resolved.error} Tools are listed, but calls will fail until it is set.`,
+  );
+}
 
 async function connectUpstream(): Promise<Client> {
+  if (!resolved.ok) throw new Error('GENREADY_API_KEY is not set');
+  const { apiKey, mcpUrl } = resolved.config;
   const client = new Client({ name: 'genready-mcp-stdio', version: PACKAGE_VERSION });
   const transport = new StreamableHTTPClientTransport(mcpUrl, {
     requestInit: { headers: { Authorization: `Bearer ${apiKey}` } },
@@ -34,7 +43,11 @@ async function connectUpstream(): Promise<Client> {
   return client;
 }
 
-const server = createProxyServer(connectUpstream, { name: 'genready', version: PACKAGE_VERSION });
+const server = createProxyServer(
+  connectUpstream,
+  { name: 'genready', version: PACKAGE_VERSION },
+  STATIC_TOOLS,
+);
 
 server.connect(new StdioServerTransport()).catch((err: unknown) => {
   console.error('Fatal error:', err instanceof Error ? err.message : err);
