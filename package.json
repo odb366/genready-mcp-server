@@ -1,0 +1,48 @@
+{
+  "name": "@genready/mcp-server",
+  "version": "1.2.1",
+  "mcpName": "io.github.odb366/genready",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/odb366/genready-mcp-server.git"
+  },
+  "description": "GenReady MCP server: scan websites for AI readiness and get a fix checklist your coding agent can act on, from Claude Desktop, Claude Code, Cursor, Windsurf or any stdio MCP client.",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "genready-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "genready",
+    "ai-readiness",
+    "geo",
+    "ai-search",
+    "llms-txt",
+    "website-analysis",
+    "claude",
+    "cursor"
+  ],
+  "homepage": "https://genready.ai/docs/mcp",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+}
