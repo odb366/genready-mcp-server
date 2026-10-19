@@ -597,7 +597,7 @@ export const STATIC_TOOLS = [
     name: 'start_site_analysis',
     title: 'Scan a whole site',
     description:
-      'Start a site-wide analysis and let it pick its own pages: the homepage first, then the sections covering the most pages, since a template problem there repeats across the site. Spends one credit per page scanned, so it can cost a lot at once; the plan cap and the credits left both apply and the smaller wins. Returns immediately. Requires an API key with Start site analyses (site:analyze) enabled.',
+      'Start a site-wide analysis and let it pick its own pages: the homepage first, then the sections covering the most pages, since a template problem there repeats across the site. Spends one credit per page scanned, so it can cost a lot at once; the plan cap and the credits left both apply and the smaller wins. When connected through OAuth (for example from Claude), a run scans at most 25 pages unless you pass max_pages. Returns immediately. Over an API key it requires the Start site analyses (site:analyze) scope.',
     inputSchema: {
       type: 'object',
       properties: {
