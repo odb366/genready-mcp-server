@@ -1,6 +1,6 @@
 {
   "name": "@genready/mcp-server",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "mcpName": "io.github.odb366/genready",
   "repository": {
     "type": "git",

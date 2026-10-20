@@ -5,7 +5,7 @@
  *   GENREADY_MCP_URL  optional, the hosted MCP endpoint (default https://genready.ai/mcp)
  *   GENREADY_API_URL  optional, legacy: its origin is used when GENREADY_MCP_URL is unset
  */
-export const PACKAGE_VERSION = '1.2.4';
+export const PACKAGE_VERSION = '1.2.5';
 export const DEFAULT_MCP_URL = 'https://genready.ai/mcp';
 
 export interface ProxyConfig {
