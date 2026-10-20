@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Start without a working key and list the tools
+        run: |
+          node --input-type=module -e "
+          import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+          import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+          import { readFileSync } from 'node:fs';
+          const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+          const transport = new StdioClientTransport({
+            command: 'node',
+            args: ['dist/index.js'],
+            env: { GENREADY_API_KEY: 'gr_live_ci_dummy_key_0000' },
+          });
+          const client = new Client({ name: 'ci', version: '1.0.0' });
+          await client.connect(transport);
+          const version = client.getServerVersion()?.version;
+          const { tools } = await client.listTools();
+          await client.close();
+          if (version !== pkg.version) throw new Error('version ' + version + ' != ' + pkg.version);
+          if (tools.length < 12) throw new Error('expected 12 tools, got ' + tools.length);
+          for (const t of tools) {
+            if (!t.title || !t.annotations) throw new Error(t.name + ' is missing a title or annotations');
+          }
+          console.log('ok: ' + tools.length + ' tools, version ' + version);
+          "

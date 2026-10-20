@@ -119,14 +119,15 @@ export const STATIC_TOOLS = [
     name: 'get_report',
     title: 'Read a page report',
     description:
-      'Read a previously generated report by ID, including its fix checklist. Free: does not use a credit.',
+      "Read a stored page report by report ID: the scores and the prioritized fix checklist, with a note on any fixes locked on the account's plan. Use it when you already have a report ID (from analyze_website, check_status or list_reports). It reads saved data and never rescans, so it shows the page as it was when scanned; call analyze_website to see changes. Returns an error if the ID is unknown or belongs to another account. Free: does not use a credit.",
     inputSchema: {
       type: 'object',
       properties: {
         report_id: {
           type: 'string',
           format: 'uuid',
-          description: 'Report ID from analyze_website or list_reports',
+          description:
+            'Report ID (UUID) from analyze_website, check_status or list_reports, for example 3f2b8c1e-9a4d-4b7e-8c21-5d6e7f8a9b0c',
         },
       },
       required: ['report_id'],
@@ -219,19 +220,21 @@ export const STATIC_TOOLS = [
     name: 'get_findings',
     title: 'List findings for a page or site',
     description:
-      "Findings are the fix list keyed by rule: each carries a stable id that survives re-scans, a policy saying whether an agent may apply the fix unattended ('apply') or should only propose it, and whether a fix can be confirmed by one cheap fetch. Pass exactly one of report_id or domain_id. Free: does not use a credit.",
+      "Findings are the fix list keyed by rule: each carries a stable id that survives re-scans, a policy saying whether an agent may apply the fix unattended ('apply') or should only propose it, and whether a fix can be confirmed by one cheap fetch. Pass exactly one of report_id (the findings of one page) or domain_id (the findings of the latest site analysis), otherwise it returns an error. Use get_report instead if you only need scores. Pass the ids it returns to verify_findings, update_finding and get_artifact. Read-only. Free: does not use a credit.",
     inputSchema: {
       type: 'object',
       properties: {
         report_id: {
           type: 'string',
           format: 'uuid',
-          description: 'Report ID, for one page',
+          description:
+            'Report ID (UUID), for the findings of one page. Omit if you pass domain_id.',
         },
         domain_id: {
           type: 'string',
           format: 'uuid',
-          description: 'Domain ID, for the latest site analysis',
+          description:
+            'Domain ID (UUID) from list_domains, for the latest site analysis. Omit if you pass report_id.',
         },
       },
       additionalProperties: false,
@@ -646,14 +649,15 @@ export const STATIC_TOOLS = [
   {
     name: 'check_status',
     title: 'Check scan progress',
-    description: 'Check the progress of a running scan started with wait=false.',
+    description:
+      'Check the progress of one page scan by report ID. Returns its status (queued, processing, complete or failed), a progress percentage when known, and which tool to call next. Use it when analyze_website returned a report ID before the scan finished, or after you started a scan with wait=false. Poll every few seconds, not in a tight loop. For a whole-site run started with start_site_analysis, call get_fix_plan instead. Returns an error if the report ID is unknown. Read-only. Free: does not use a credit.',
     inputSchema: {
       type: 'object',
       properties: {
         report_id: {
           type: 'string',
           format: 'uuid',
-          description: 'Report ID to check',
+          description: 'Report ID (UUID) returned by analyze_website, for the scan to check',
         },
       },
       required: ['report_id'],
@@ -674,7 +678,7 @@ export const STATIC_TOOLS = [
     name: 'list_reports',
     title: 'List reports',
     description:
-      'List reports this account has generated, newest first, with IDs, URLs, scores and status.',
+      "List the page reports this account has generated, newest first. Each entry has the report ID, URL, overall score, status and creation time. Use it to find a report ID for get_report or get_findings, or to see which pages were already scanned before spending a credit on analyze_website. Filter by URL or status; results come in pages of up to 100, so check the page count at the top of the output and request the next page for more. Read-only. Free: does not use a credit. Returns 'No reports found.' when nothing matches.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -682,22 +686,24 @@ export const STATIC_TOOLS = [
           type: 'integer',
           minimum: 1,
           default: 1,
-          description: 'Page number',
+          description: 'Page number, starting at 1',
         },
         limit: {
           type: 'integer',
           minimum: 1,
           maximum: 100,
           default: 20,
-          description: 'Results per page',
+          description: 'Results per page, 1 to 100 (default 20)',
         },
         status: {
           type: 'string',
-          description: 'Filter by status: complete, processing, queued, failed',
+          description:
+            "Only reports with this status: 'complete', 'processing', 'queued' or 'failed'. Omit for all.",
         },
         url: {
           type: 'string',
-          description: 'Filter by URL (partial match)',
+          description:
+            "Only reports whose URL contains this text, for example 'example.com/pricing'. Omit for all.",
         },
       },
       additionalProperties: false,
